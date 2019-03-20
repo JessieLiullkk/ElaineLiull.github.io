@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+    <!-- title -->
+
+
+
+
+<!-- keywords -->
+
+
+
+
+<head><meta name="generator" content="Hexo 3.8.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="author" content="ElaineLiu">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="ElaineLiu">
+    
+    <meta name="keywords" content="hexo,hexo-theme,hexo-blog">
+    
+    <meta name="description" content>
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>React中的setState没有想象中简单 · ElaineLiu&#39;s Blog</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href="/css/style.css?v=20180824" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="stylesheet" href="/css/mobile.css?v=20180824" media="(max-width: 980px)">
+    
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+(function( w ){
+	"use strict";
+	// rel=preload support test
+	if( !w.loadCSS ){
+		w.loadCSS = function(){};
+	}
+	// define on the loadCSS obj
+	var rp = loadCSS.relpreload = {};
+	// rel=preload feature support test
+	// runs once and returns a function for compat purposes
+	rp.support = (function(){
+		var ret;
+		try {
+			ret = w.document.createElement( "link" ).relList.supports( "preload" );
+		} catch (e) {
+			ret = false;
+		}
+		return function(){
+			return ret;
+		};
+	})();
+
+	// if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+	// then change that media back to its intended value on load
+	rp.bindMediaToggle = function( link ){
+		// remember existing media attr for ultimate state, or default to 'all'
+		var finalMedia = link.media || "all";
+
+		function enableStylesheet(){
+			link.media = finalMedia;
+		}
+
+		// bind load handlers to enable media
+		if( link.addEventListener ){
+			link.addEventListener( "load", enableStylesheet );
+		} else if( link.attachEvent ){
+			link.attachEvent( "onload", enableStylesheet );
+		}
+
+		// Set rel and non-applicable media type to start an async request
+		// note: timeout allows this to happen async to let rendering continue in IE
+		setTimeout(function(){
+			link.rel = "stylesheet";
+			link.media = "only x";
+		});
+		// also enable media after 3 seconds,
+		// which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+		setTimeout( enableStylesheet, 3000 );
+	};
+
+	// loop through link elements in DOM
+	rp.poly = function(){
+		// double check this to prevent external calls from running
+		if( rp.support() ){
+			return;
+		}
+		var links = w.document.getElementsByTagName( "link" );
+		for( var i = 0; i < links.length; i++ ){
+			var link = links[ i ];
+			// qualify links to those with rel=preload and as=style attrs
+			if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+				// prevent rerunning on link
+				link.setAttribute( "data-loadcss", true );
+				// bind listeners to toggle media back
+				rp.bindMediaToggle( link );
+			}
+		}
+	};
+
+	// if unsupported, run the polyfill
+	if( !rp.support() ){
+		// run once at least
+		rp.poly();
+
+		// rerun poly on an interval until onload
+		var run = w.setInterval( rp.poly, 500 );
+		if( w.addEventListener ){
+			w.addEventListener( "load", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		} else if( w.attachEvent ){
+			w.attachEvent( "onload", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		}
+	}
+
+
+	// commonjs
+	if( typeof exports !== "undefined" ){
+		exports.loadCSS = loadCSS;
+	}
+	else {
+		w.loadCSS = loadCSS;
+	}
+}( typeof global !== "undefined" ? global : this ) );
+</script>
+
+    <link rel="icon" href="/assets/favicon.ico">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js" as="script">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" as="script">
+    <link rel="preload" href="/scripts/main.js" as="script">
+    <link rel="preload" as="font" href="/font/Oswald-Regular.ttf" crossorigin>
+    <link rel="preload" as="font" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" crossorigin>
+    
+    <!-- fancybox -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+</head>
+
+    
+        <body class="post-body">
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <div class="banner">
+            <div class="blog-title">
+                <a href="/">ElaineLiu&#39;s Blog.</a>
+            </div>
+            <div class="post-title">
+                <a href="#" class="post-name">React中的setState没有想象中简单</a>
+            </div>
+    </div>
+    
+    <a class="home-link" href="/">ElaineLiu's Blog.</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style="
+
+
+
+
+
+
+
+height:50vh;
+">
+    
+    <!-- 主页  -->
+    
+    
+    <!-- 404页  -->
+            
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(/intro/index.jpg)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+            React中的setState没有想象中简单
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+            
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+            <div class="post-intros">
+                <!-- 文章页标签  -->
+                
+                
+                    <div class="post-intro-read">
+                        <span>字数统计: <span class="post-count word-count">1k</span>阅读时长: <span class="post-count reading-time">5 min</span></span>
+                    </div>
+                
+                <div class="post-intro-meta">
+                    <span class="post-intro-calander iconfont-archer">&#xe676;</span>
+                    <span class="post-intro-time">2019/03/20</span>
+                    
+                    <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                        <span class="iconfont-archer">&#xe602;</span>
+                        <span id="busuanzi_value_page_pv"></span>
+                    </span>
+                    
+                    <span class="shareWrapper">
+                        <span class="iconfont-archer shareIcon">&#xe71d;</span>
+                        <span class="shareText">Share</span>
+                        <ul class="shareList">
+                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                                <div class="share-qrcode"></div>
+                            </li>
+                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                        </ul>
+                    </span>
+                </div>
+            </div>
+        
+    </div>
+</div>
+        <script>
+ 
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  function asyncErr(){
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (cb) { o.addEventListener('load', function (e) { cb(null, e); }, false); }
+    if (err) { o.addEventListener('error', function (e) { err(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+
+  var asyncLoadWithFallBack = function(arr, success, reject) {
+      var currReject = function(){
+        reject()
+        arr.shift()
+        if(arr.length)
+          async(arr[0], success, currReject)
+        }
+
+      async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack([
+    "https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", 
+    "https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js",
+    "/lib/webfontloader.min.js"
+  ], asyncCb, asyncErr)
+</script>        
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <p>最近看到一些文章关于setState的用法，在这里做一个笔记。</p>
+<h2 id="setState不为人知的参数"><a href="#setState不为人知的参数" class="headerlink" title="setState不为人知的参数"></a>setState不为人知的参数</h2><h3 id="第一个参数：不仅能接受一个对象，还能接受一个函数"><a href="#第一个参数：不仅能接受一个对象，还能接受一个函数" class="headerlink" title="第一个参数：不仅能接受一个对象，还能接受一个函数"></a>第一个参数：不仅能接受一个对象，还能接受一个函数</h3><h4 id="该函数接受该组件前一刻的-state-以及当前的-props-作为参数，计算和返回下一刻的-state："><a href="#该函数接受该组件前一刻的-state-以及当前的-props-作为参数，计算和返回下一刻的-state：" class="headerlink" title="该函数接受该组件前一刻的 state 以及当前的 props 作为参数，计算和返回下一刻的 state："></a>该函数接受该组件前一刻的 state 以及当前的 props 作为参数，计算和返回下一刻的 state：</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">this.setState(<span class="keyword">function</span> (state, props) &#123;</span><br><span class="line"> <span class="built_in">return</span> &#123;</span><br><span class="line">  score: state.score - 1</span><br><span class="line"> &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<h3 id="第二个参数：返回当前计算后的state状态"><a href="#第二个参数：返回当前计算后的state状态" class="headerlink" title="第二个参数：返回当前计算后的state状态"></a>第二个参数：返回当前计算后的state状态</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">handle</span></span>() &#123;</span><br><span class="line">    this.setState((prevState) =&gt; (&#123; count: prevState.count + 1 &#125;), () =&gt; &#123;</span><br><span class="line">        console.log(this.state)</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="setState是同步还是异步？"><a href="#setState是同步还是异步？" class="headerlink" title="setState是同步还是异步？"></a>setState是同步还是异步？</h2><h3 id="作为一个react初学者，看过一些文章之后我才发现setState是有异步和同步的区分的，所以如果没有很深入的去研究一个框架，很多东西你学会的也是表面的。"><a href="#作为一个react初学者，看过一些文章之后我才发现setState是有异步和同步的区分的，所以如果没有很深入的去研究一个框架，很多东西你学会的也是表面的。" class="headerlink" title="作为一个react初学者，看过一些文章之后我才发现setState是有异步和同步的区分的，所以如果没有很深入的去研究一个框架，很多东西你学会的也是表面的。"></a>作为一个react初学者，看过一些文章之后我才发现setState是有异步和同步的区分的，所以如果没有很深入的去研究一个框架，很多东西你学会的也是表面的。</h3><h2 id="生命周期中的setState"><a href="#生命周期中的setState" class="headerlink" title="生命周期中的setState"></a>生命周期中的setState</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">class App extends Component &#123;</span><br><span class="line">  state=&#123;</span><br><span class="line">    count:0</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="title">componentDidMount</span></span>()&#123;</span><br><span class="line">    this.setState((prevState) =&gt;(&#123;</span><br><span class="line">      count:prevState.count+1</span><br><span class="line">   &#125;),()=&gt;&#123;console.log(<span class="string">"setState"</span>,this.state)&#125; // 后输出 setState &#123;count: 1&#125;</span><br><span class="line">   )</span><br><span class="line">   console.log(this.state) // 先输出 &#123;count: 0&#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="title">render</span></span>() &#123;</span><br><span class="line">    <span class="built_in">return</span> (</span><br><span class="line">      &lt;div className=<span class="string">"App"</span>&gt;</span><br><span class="line">        &lt;button&gt;&#123;this.state.count&#125;&lt;/button&gt;</span><br><span class="line">      &lt;/div&gt;</span><br><span class="line">    );</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="React引发的事件，如onClick-onChange"><a href="#React引发的事件，如onClick-onChange" class="headerlink" title="React引发的事件，如onClick/onChange"></a>React引发的事件，如onClick/onChange</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">state=&#123;</span><br><span class="line">   count:0</span><br><span class="line"> &#125;</span><br><span class="line"> handle = () =&gt; &#123;</span><br><span class="line">   this.setState((prevState) =&gt;(&#123;</span><br><span class="line">      count:prevState.count+1</span><br><span class="line">   &#125;),()=&gt;&#123;console.log(<span class="string">"setState"</span>,this.state)&#125; // 输出修改后的值</span><br><span class="line">   )</span><br><span class="line">   console.log(this.state) // 输出上一个state的</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="function"><span class="title">render</span></span>() &#123;</span><br><span class="line">   <span class="built_in">return</span> (</span><br><span class="line">     &lt;div className=<span class="string">"App"</span>&gt;</span><br><span class="line">       &lt;button onClick=&#123;this.handle&#125;&gt;&#123;this.state.count&#125;&lt;/button&gt;</span><br><span class="line">     &lt;/div&gt;</span><br><span class="line">   );</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="原生事件的setState-通过addEventListener添加的事件"><a href="#原生事件的setState-通过addEventListener添加的事件" class="headerlink" title="原生事件的setState:通过addEventListener添加的事件"></a>原生事件的setState:通过addEventListener添加的事件</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">state=&#123;</span><br><span class="line">    count:0</span><br><span class="line">  &#125;</span><br><span class="line">  handle = () =&gt; &#123;</span><br><span class="line">    this.setState((prevState) =&gt;(&#123;</span><br><span class="line">       count:prevState.count+1</span><br><span class="line">    &#125;),()=&gt;&#123;console.log(<span class="string">"setState"</span>,this.state)&#125; // 两次输出一致，都是修改后的state值</span><br><span class="line">    )</span><br><span class="line">    console.log(this.state) // 两次输出一致，都是修改后的state值</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="title">componentDidMount</span></span>()&#123;</span><br><span class="line">    document.getElementById(<span class="string">'myBtn'</span>).addEventListener(<span class="string">'click'</span>,this.handle)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="title">render</span></span>() &#123;</span><br><span class="line">    <span class="built_in">return</span> (</span><br><span class="line">      &lt;div className=<span class="string">"App"</span>&gt;</span><br><span class="line">        &lt;button id=<span class="string">'myBtn'</span>&gt;&#123;this.state.count&#125;&lt;/button&gt;</span><br><span class="line">      &lt;/div&gt;</span><br><span class="line">    );</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="setTimeout-setInterval中的setState"><a href="#setTimeout-setInterval中的setState" class="headerlink" title="setTimeout/setInterval中的setState"></a>setTimeout/setInterval中的setState</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">state=&#123;</span><br><span class="line">   count:0</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="function"><span class="title">componentDidMount</span></span>()&#123;</span><br><span class="line">   setTimeout(()=&gt;&#123;</span><br><span class="line">     this.setState(&#123;</span><br><span class="line">       count:this.state.count+1</span><br><span class="line">     &#125;)</span><br><span class="line">     console.log(<span class="string">"1"</span>,this.state)// 修改后的state值 &#123;count: 1&#125;</span><br><span class="line">   &#125;,1000)</span><br><span class="line">   console.log(<span class="string">"2"</span>,this.state) // &#123;count: 0&#125;</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="function"><span class="title">render</span></span>() &#123;</span><br><span class="line">   <span class="built_in">return</span> (</span><br><span class="line">     &lt;div className=<span class="string">"App"</span>&gt;</span><br><span class="line">       &lt;button id=<span class="string">'myBtn'</span>&gt;&#123;this.state.count&#125;&lt;/button&gt;</span><br><span class="line">     &lt;/div&gt;</span><br><span class="line">   );</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="setState的批量合并"><a href="#setState的批量合并" class="headerlink" title="setState的批量合并"></a>setState的批量合并</h2><p>看到一些文章说setState遇到批量更新的会合并，，其实，是分以下两种写法的<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">this.setState(&#123; count: this.state.count + 1 &#125;)</span><br><span class="line">this.setState(&#123; count: this.state.count + 1 &#125;)</span><br><span class="line">this.setState(&#123; count: this.state.count + 1 &#125;)</span><br><span class="line">// 这种情况是会合并且只执行最后一次</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">this.setState((prevState) =&gt; (&#123; count: prevState.count + 1 &#125;))</span><br><span class="line">this.setState((prevState) =&gt; (&#123; count: prevState.count + 1 &#125;))</span><br><span class="line">this.setState((prevState) =&gt; (&#123; count: prevState.count + 1 &#125;))</span><br><span class="line">// 这种情况是输出的值是三次累加的结果</span><br></pre></td></tr></table></figure>
+<p>例子：在React引起的事件<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">state=&#123;</span><br><span class="line">   count:0</span><br><span class="line"> &#125;</span><br><span class="line"> handle = () =&gt; &#123;</span><br><span class="line">   this.setState(&#123;</span><br><span class="line">     count:this.state.count+1</span><br><span class="line">   &#125;)</span><br><span class="line">   this.setState(&#123;</span><br><span class="line">     count:this.state.count+1</span><br><span class="line">   &#125;)</span><br><span class="line">    // 每次只加1</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="function"><span class="title">render</span></span>() &#123;</span><br><span class="line">   <span class="built_in">return</span> (</span><br><span class="line">     &lt;div className=<span class="string">"App"</span>&gt;</span><br><span class="line">       &lt;button onClick=&#123;this.handle&#125;&gt;&#123;this.state.count&#125;&lt;/button&gt;</span><br><span class="line">     &lt;/div&gt;</span><br><span class="line">   );</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">state=&#123;</span><br><span class="line">   count:0</span><br><span class="line"> &#125;</span><br><span class="line"> handle = () =&gt; &#123;</span><br><span class="line">   this.setState((prevState) =&gt;(&#123;</span><br><span class="line">      count:prevState.count+1</span><br><span class="line">   &#125;))</span><br><span class="line">   this.setState((prevState) =&gt;(&#123;</span><br><span class="line">     count:prevState.count+1</span><br><span class="line">   &#125;))</span><br><span class="line">  // 每次加2</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="function"><span class="title">render</span></span>() &#123;</span><br><span class="line">   <span class="built_in">return</span> (</span><br><span class="line">     &lt;div className=<span class="string">"App"</span>&gt;</span><br><span class="line">       &lt;button onClick=&#123;this.handle&#125;&gt;&#123;this.state.count&#125;&lt;/button&gt;</span><br><span class="line">     &lt;/div&gt;</span><br><span class="line">   );</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>在生命周期中<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">componentDidMount</span></span> () &#123;</span><br><span class="line">   this.setState(&#123;</span><br><span class="line">     count:this.state.count+1</span><br><span class="line">   &#125;)</span><br><span class="line">   this.setState(&#123;</span><br><span class="line">    count:this.state.count+1</span><br><span class="line">  &#125;)</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">componentDidMount</span></span> () &#123;</span><br><span class="line">  this.setState((prevState) =&gt;(&#123;</span><br><span class="line">     count:prevState.count+1</span><br><span class="line">  &#125;))</span><br><span class="line">  this.setState((prevState) =&gt;(&#123;</span><br><span class="line">    count:prevState.count+1</span><br><span class="line">  &#125;))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在setTimeout中<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">componentDidMount</span></span> () &#123;</span><br><span class="line">   setTimeout(()=&gt;&#123;</span><br><span class="line">     this.setState(&#123;</span><br><span class="line">       count:this.state.count+1</span><br><span class="line">     &#125;)</span><br><span class="line">     this.setState(&#123;</span><br><span class="line">      count:this.state.count+1</span><br><span class="line">    &#125;)</span><br><span class="line">    this.setState(&#123;</span><br><span class="line">      count:this.state.count+1</span><br><span class="line">    &#125;)</span><br><span class="line">   &#125;,1000)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="title">render</span></span>() &#123;</span><br><span class="line">    <span class="built_in">return</span> (</span><br><span class="line">      &lt;div className=<span class="string">"App"</span>&gt;</span><br><span class="line">        &lt;button &gt;&#123;this.state.count&#125;&lt;/button&gt; //3</span><br><span class="line">      &lt;/div&gt;</span><br><span class="line">    );</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<p>总结：<br>1.setState为异步：在react的生命周期及由react引起的事件（onClick/onChange）中<br>2.setState为同步：由原生事件引起的及在setTimeout/setInterval中<br>3.setState批量操作是否会合并：当setState为异步时且参数为对象，取最后一次来执行，若参数为函数，则每一次都会计算；当setState为同步时，不管参数是对象还是函数，都会执行。</p>
+
+    </article>
+    <!-- license  -->
+    
+        <div class="license-wrapper">
+            <p>原文作者：<a href="http://yoursite.com">ElaineLiu</a>
+            </p><p>原文链接：<a href="http://yoursite.com/2019/03/20/react-setState/">http://yoursite.com/2019/03/20/react-setState/</a>
+            </p><p>发表日期：<a href="http://yoursite.com/2019/03/20/react-setState/">March 20th 2019, 5:59:39 pm</a>
+            </p><p>更新日期：<a href="http://yoursite.com/2019/03/20/react-setState/">March 20th 2019, 5:59:23 pm</a>
+            </p><p>版权声明：本文采用<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可</p>
+        </div>
+    
+    <!-- paginator  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href="/2019/03/20/method-Array/" title="Array的方法集锦">
+                    <div class="prevTitle">Array的方法集锦</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!-- partial('_partial/comment/changyan') -->
+    <!--PC版-->
+
+
+    
+    
+
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:475420141@qq.com" class="iconfont-archer email" title="email"></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/ElaineLiull" class="iconfont-archer github" target="_blank" title="github"></a>
+            
+        
+    
+        
+            
+                <span class="iconfont-archer wechat" title="wechat">
+                  
+                  <img class="profile-qr" src="/assets/example_qr.png">
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+    
+     
+    <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+    
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="toc-wrapper" style=
+    
+
+
+
+
+
+
+
+top:50vh;
+
+    >
+        <div class="toc-catalog">
+            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+        </div>
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#setState不为人知的参数"><span class="toc-number">1.</span> <span class="toc-text">setState不为人知的参数</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#第一个参数：不仅能接受一个对象，还能接受一个函数"><span class="toc-number">1.1.</span> <span class="toc-text">第一个参数：不仅能接受一个对象，还能接受一个函数</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#该函数接受该组件前一刻的-state-以及当前的-props-作为参数，计算和返回下一刻的-state："><span class="toc-number">1.1.1.</span> <span class="toc-text">该函数接受该组件前一刻的 state 以及当前的 props 作为参数，计算和返回下一刻的 state：</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#第二个参数：返回当前计算后的state状态"><span class="toc-number">1.2.</span> <span class="toc-text">第二个参数：返回当前计算后的state状态</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#setState是同步还是异步？"><span class="toc-number">2.</span> <span class="toc-text">setState是同步还是异步？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#作为一个react初学者，看过一些文章之后我才发现setState是有异步和同步的区分的，所以如果没有很深入的去研究一个框架，很多东西你学会的也是表面的。"><span class="toc-number">2.1.</span> <span class="toc-text">作为一个react初学者，看过一些文章之后我才发现setState是有异步和同步的区分的，所以如果没有很深入的去研究一个框架，很多东西你学会的也是表面的。</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#生命周期中的setState"><span class="toc-number">3.</span> <span class="toc-text">生命周期中的setState</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#React引发的事件，如onClick-onChange"><span class="toc-number">3.1.</span> <span class="toc-text">React引发的事件，如onClick/onChange</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#原生事件的setState-通过addEventListener添加的事件"><span class="toc-number">3.2.</span> <span class="toc-text">原生事件的setState:通过addEventListener添加的事件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#setTimeout-setInterval中的setState"><span class="toc-number">3.3.</span> <span class="toc-text">setTimeout/setInterval中的setState</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#setState的批量合并"><span class="toc-number">4.</span> <span class="toc-text">setState的批量合并</span></a></li></ol>
+    </div>
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 4
+        </div>
+        <!-- search  -->
+        
+    </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> Invalid date </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">Invalid date</span><a class="archive-post-title" href="/2019/03/20/method-Array/">Array的方法集锦</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> Invalid date </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">Invalid date</span><a class="archive-post-title" href="/2019/03/20/react-something/">关于React你必须知道的事</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2019 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/20</span><a class="archive-post-title" href="/2019/03/20/method-var/">四种方法解决‘var’问题</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> Invalid date </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">Invalid date</span><a class="archive-post-title" href="/2019/03/20/react-setState/">React中的setState没有想象中简单</a>
+        </li>
+    
+    </ul></div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br>
+    1、请确保node版本大于6.2<br>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: "/",
+        author: "ElaineLiu"
+    }
+</script>
+    <!-- CDN failover -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ === 'undefined')
+        {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js">\x3C/script>')
+        }
+    </script>
+    <script src="/scripts/main.js"></script>
+    <!-- algolia -->
+    
+    <!-- busuanzi  -->
+    
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+    
+        <script src="/scripts/share.js" async></script>    
+     
+    </body>
+</html>
+
+
